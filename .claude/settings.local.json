@@ -15,7 +15,26 @@
       "Bash(git --version)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(npm install *)",
+      "Bash(git rm *)",
+      "Bash(mvn -version)",
+      "Bash(docker -v)",
+      "Bash(npm run *)",
+      "Bash(winget search *)",
+      "Bash(winget install *)",
+      "Bash(curl -fsL https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip -o /tmp/maven.zip)",
+      "Read(//tmp/**)",
+      "WebSearch",
+      "Bash(curl -fsL https://dlcdn.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.zip -o /tmp/maven.zip)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(curl -fsL https://mirrors.estointernet.in/apache/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.zip -o /tmp/maven.zip)",
+      "Bash(unzip -qo /tmp/maven.zip -d /tmp/maven)",
+      "Bash(powershell.exe -Command \"Invoke-WebRequest -Uri 'https://dlcdn.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.zip' -OutFile 'C:\\\\Users\\\\admin\\\\AppData\\\\Local\\\\Temp\\\\maven.zip' -UseBasicParsing\")",
+      "Bash(powershell.exe *)",
+      "Bash(export JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.19.10-hotspot\")",
+      "Bash(export MAVEN_HOME=\"/c/tools/maven/apache-maven-3.9.16\")",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH\")"
     ]
   }
 }
