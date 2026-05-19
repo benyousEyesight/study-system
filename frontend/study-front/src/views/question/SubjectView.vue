@@ -142,6 +142,15 @@ async function addChildKp(data: any) {
   kpTree.value = res.data
 }
 
+async function openKpItemDialog(data: any) {
+  const name = prompt('请输入知识点名称：', data.name)
+  if (!name || name === data.name) return
+  await request.put('/knowledge-points', { id: data.id, name, subjectId: currentSubject.value.id, tenantId: 0 })
+  ElMessage.success('更新成功')
+  const res: any = await request.get('/knowledge-points/tree', { params: { subjectId: currentSubject.value.id, tenantId: 0 } })
+  kpTree.value = res.data
+}
+
 async function deleteKp(id: number) {
   await ElMessageBox.confirm('确定删除该知识点（含子节点）吗？', '提示')
   await request.delete(`/knowledge-points/${id}`)

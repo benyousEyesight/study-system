@@ -121,7 +121,7 @@ const form = reactive({
   knowledgePointIds: [] as number[],
   contentText: '',
   options: [{ value: '' }, { value: '' }],
-  correctAnswer: '',
+  correctAnswer: '' as string | string[],
   analysis: '',
   tenantId: 0,
 })
