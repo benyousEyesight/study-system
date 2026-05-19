@@ -1,0 +1,48 @@
+CREATE TABLE IF NOT EXISTS subject (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    code VARCHAR(50),
+    sort INT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='科目表';
+
+CREATE TABLE IF NOT EXISTS knowledge_point (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT NOT NULL,
+    subject_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    parent_id BIGINT DEFAULT 0,
+    level INT DEFAULT 1,
+    sort INT DEFAULT 0,
+    status TINYINT DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_subject (subject_id),
+    INDEX idx_parent (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识点表';
+
+CREATE TABLE IF NOT EXISTS question (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT NOT NULL,
+    subject_id BIGINT NOT NULL,
+    type VARCHAR(30) NOT NULL COMMENT 'SINGLE_CHOICE/MULTIPLE_CHOICE/TRUE_FALSE/FILL_BLANK/SHORT_ANSWER/ESSAY/COMPOSITE',
+    difficulty DECIMAL(2,1) DEFAULT 2.0 COMMENT '1-3 1易 2中 3难',
+    content_json TEXT NOT NULL COMMENT '题目内容JSON',
+    answer_json TEXT COMMENT '答案JSON',
+    analysis TEXT COMMENT '题目解析',
+    status VARCHAR(20) DEFAULT 'DRAFT' COMMENT 'DRAFT/PUBLISHED/ARCHIVED',
+    created_by BIGINT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_subject (subject_id),
+    INDEX idx_type (type),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='题目表';
+
+CREATE TABLE IF NOT EXISTS question_kp (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    question_id BIGINT NOT NULL,
+    knowledge_point_id BIGINT NOT NULL,
+    UNIQUE KEY uk_q_kp (question_id, knowledge_point_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='题目知识点关联表';
