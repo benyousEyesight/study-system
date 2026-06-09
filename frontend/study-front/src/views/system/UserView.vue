@@ -6,25 +6,25 @@
     </el-row>
 
     <el-table :data="userList" border stripe style="margin-top: 20px" v-loading="loading">
-      <el-table-column prop="username" label="用户名" width="150" />
-      <el-table-column prop="realName" label="姓名" width="120" />
-      <el-table-column prop="email" label="邮箱" />
-      <el-table-column prop="phone" label="手机号" width="130" />
-      <el-table-column prop="userType" label="类型" width="100">
+      <el-table-column prop="username" label="用户名" min-width="150" />
+      <el-table-column prop="realName" label="姓名" min-width="140" />
+      <el-table-column prop="email" label="邮箱" min-width="160" />
+      <el-table-column prop="phone" label="手机号" min-width="140" />
+      <el-table-column prop="userType" label="类型" min-width="110">
         <template #default="{ row }">
           <el-tag :type="typeTag(row.userType)" size="small">
             {{ typeLabel(row.userType) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="status" label="状态" width="80">
+      <el-table-column prop="status" label="状态" min-width="90">
         <template #default="{ row }">
           <el-tag :type="row.status ? 'success' : 'danger'" size="small">
             {{ row.status ? '启用' : '禁用' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(row.id)">删除</el-button>

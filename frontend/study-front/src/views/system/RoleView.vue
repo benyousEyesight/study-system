@@ -6,17 +6,17 @@
     </el-row>
 
     <el-table :data="roleList" border stripe style="margin-top: 20px" v-loading="loading">
-      <el-table-column prop="name" label="角色名称" width="150" />
-      <el-table-column prop="code" label="角色编码" width="150" />
-      <el-table-column prop="description" label="描述" />
-      <el-table-column prop="isSystem" label="系统内置" width="100">
+      <el-table-column prop="name" label="角色名称" min-width="150" />
+      <el-table-column prop="code" label="角色编码" min-width="150" />
+      <el-table-column prop="description" label="描述" min-width="200" />
+      <el-table-column prop="isSystem" label="系统内置" min-width="100">
         <template #default="{ row }">
           <el-tag :type="row.isSystem ? 'danger' : 'info'" size="small">
             {{ row.isSystem ? '是' : '否' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="340" fixed="right">
+      <el-table-column label="操作" width="390" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
           <el-button size="small" @click="openPermissionDialog(row)">权限</el-button>

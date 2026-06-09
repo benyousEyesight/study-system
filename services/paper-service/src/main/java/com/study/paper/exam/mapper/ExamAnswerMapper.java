@@ -21,4 +21,13 @@ public interface ExamAnswerMapper extends BaseMapper<ExamAnswer> {
             "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
             "</script>")
     List<Map<String, Object>> selectQuestionsByIds(@Param("ids") List<Long> ids);
+
+    @Select("<script>" +
+            "SELECT q.id, q.subject_id AS subjectId, s.name AS subjectName " +
+            "FROM question_db.question q " +
+            "LEFT JOIN question_db.subject s ON q.subject_id = s.id " +
+            "WHERE q.id IN " +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<Map<String, Object>> selectQuestionSubjects(@Param("ids") List<Long> ids);
 }

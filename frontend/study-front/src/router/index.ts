@@ -39,6 +39,12 @@ const router = createRouter({
           meta: { title: '账户管理' },
         },
         {
+          path: 'profile',
+          name: 'Profile',
+          component: () => import('@/views/system/ProfileView.vue'),
+          meta: { title: '个人信息' },
+        },
+        {
           path: 'questions',
           name: 'Questions',
           component: () => import('@/views/question/QuestionListView.vue'),

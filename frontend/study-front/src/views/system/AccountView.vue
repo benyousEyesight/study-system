@@ -32,14 +32,14 @@
     </el-card>
 
     <el-table :data="accountList" border stripe style="margin-top: 16px" v-loading="loading">
-      <el-table-column prop="username" label="用户名" width="140" />
-      <el-table-column prop="realName" label="姓名" width="120" />
-      <el-table-column prop="userType" label="类型" width="100">
+      <el-table-column prop="username" label="用户名" min-width="140" />
+      <el-table-column prop="realName" label="姓名" min-width="140" />
+      <el-table-column prop="userType" label="类型" min-width="110">
         <template #default="{ row }">
           <el-tag :type="typeTag(row.userType)" size="small">{{ typeLabel(row.userType) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="状态" width="90">
+      <el-table-column label="状态" min-width="170">
         <template #default="{ row }">
           <el-switch
             :model-value="row.status === 1"
@@ -50,9 +50,9 @@
           />
         </template>
       </el-table-column>
-      <el-table-column prop="email" label="邮箱" />
-      <el-table-column prop="phone" label="手机号" width="130" />
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column prop="email" label="邮箱" min-width="160" />
+      <el-table-column prop="phone" label="手机号" min-width="140" />
+      <el-table-column label="操作" width="310" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openResetPwdDialog(row)">重置密码</el-button>
           <el-button size="small" @click="openEditDialog(row)">编辑</el-button>

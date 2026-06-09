@@ -3,10 +3,14 @@ package com.study.auth.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.study.auth.common.BusinessException;
+import com.study.auth.mapper.PermissionMapper;
+import com.study.auth.mapper.RoleMapper;
 import com.study.auth.mapper.UserMapper;
 import com.study.auth.mapper.UserRoleMapper;
 import com.study.auth.model.dto.PageResult;
 import com.study.auth.model.dto.UserDTO;
+import com.study.auth.model.entity.Permission;
+import com.study.auth.model.entity.Role;
 import com.study.auth.model.entity.User;
 import com.study.auth.model.entity.UserRole;
 import org.springframework.beans.BeanUtils;
@@ -25,6 +29,10 @@ public class UserService {
     private UserMapper userMapper;
     @Autowired
     private UserRoleMapper userRoleMapper;
+    @Autowired
+    private RoleMapper roleMapper;
+    @Autowired
+    private PermissionMapper permissionMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -95,5 +103,26 @@ public class UserService {
         UserDTO dto = new UserDTO();
         BeanUtils.copyProperties(user, dto);
         return dto;
+    }
+
+    public UserDTO getProfile(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) return null;
+        UserDTO dto = buildDTO(user);
+        // 加载角色
+        List<Long> roleIds = userRoleMapper.selectRoleIdsByUserId(userId);
+        List<Role> roles = roleIds.isEmpty() ? List.of() : roleMapper.selectBatchIds(roleIds);
+        dto.setRoles(roles.stream().map(Role::getName).collect(Collectors.toList()));
+        // 加载权限
+        List<Permission> perms = roleMapper.selectPermissionsByUserId(userId);
+        dto.setPermissions(perms.stream().map(Permission::getCode).collect(Collectors.toList()));
+        return dto;
+    }
+
+    public void updateAvatar(Long userId, String avatarUrl) {
+        User user = new User();
+        user.setId(userId);
+        user.setAvatar(avatarUrl);
+        userMapper.updateById(user);
     }
 }

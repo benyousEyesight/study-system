@@ -102,7 +102,9 @@ const userStore = useUserStore()
 const isCollapsed = computed(() => appStore.sidebarCollapsed)
 
 function handleCommand(command: string) {
-  if (command === 'logout') {
+  if (command === 'profile') {
+    router.push('/profile')
+  } else if (command === 'logout') {
     removeToken()
     router.push('/login')
   }
