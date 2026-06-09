@@ -12,12 +12,12 @@ import com.study.paper.exam.model.entity.Exam;
 import com.study.paper.exam.model.entity.ExamAnswer;
 import com.study.paper.exam.model.entity.ExamAssignment;
 import com.study.paper.exam.model.entity.ExamSession;
-import com.study.paper.paper.mapper.PaperMapper;
-import com.study.paper.paper.mapper.PaperSectionMapper;
-import com.study.paper.paper.mapper.PaperQuestionMapper;
-import com.study.paper.paper.model.entity.Paper;
-import com.study.paper.paper.model.entity.PaperSection;
-import com.study.paper.paper.model.entity.PaperQuestion;
+import com.study.paper.mapper.PaperMapper;
+import com.study.paper.mapper.PaperSectionMapper;
+import com.study.paper.mapper.PaperQuestionMapper;
+import com.study.paper.model.entity.Paper;
+import com.study.paper.model.entity.PaperSection;
+import com.study.paper.model.entity.PaperQuestion;
 import com.study.paper.common.BusinessException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -213,7 +213,11 @@ public class ExamSessionService {
         ExamSession session = new ExamSession();
         session.setExamId(examId);
         session.setUserId(userId);
-        session.setPaperSnapshot(objectMapper.writeValueAsString(snapshot));
+        try {
+            session.setPaperSnapshot(objectMapper.writeValueAsString(snapshot));
+        } catch (Exception e) {
+            throw new BusinessException("试卷快照序列化失败");
+        }
         session.setStartTime(LocalDateTime.now());
         session.setStatus("IN_PROGRESS");
         session.setTabSwitchCount(0);
