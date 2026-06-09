@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.study.auth.common.BusinessException;
 import com.study.auth.mapper.RoleMapper;
+import com.study.auth.mapper.RolePermissionMapper;
 import com.study.auth.mapper.UserMapper;
 import com.study.auth.model.dto.PageResult;
 import com.study.auth.model.entity.Role;
+import com.study.auth.model.entity.RolePermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,8 @@ public class RoleService {
 
     @Autowired
     private RoleMapper roleMapper;
+    @Autowired
+    private RolePermissionMapper rolePermissionMapper;
     @Autowired
     private UserMapper userMapper;
 
@@ -55,6 +59,24 @@ public class RoleService {
         if (role != null && role.getIsSystem() == 1) {
             throw new BusinessException("系统内置角色不能删除");
         }
+        rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, id));
         roleMapper.deleteById(id);
+    }
+
+    public List<Long> getPermissionIds(Long roleId) {
+        return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
+    }
+
+    @Transactional
+    public void assignPermissions(Long roleId, List<Long> permissionIds) {
+        rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, roleId));
+        if (permissionIds != null) {
+            for (Long pid : permissionIds) {
+                RolePermission rp = new RolePermission();
+                rp.setRoleId(roleId);
+                rp.setPermissionId(pid);
+                rolePermissionMapper.insert(rp);
+            }
+        }
     }
 }

@@ -4,13 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.study.auth.common.BusinessException;
 import com.study.auth.mapper.UserMapper;
+import com.study.auth.mapper.UserRoleMapper;
 import com.study.auth.model.dto.PageResult;
 import com.study.auth.model.dto.UserDTO;
 import com.study.auth.model.entity.User;
+import com.study.auth.model.entity.UserRole;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +23,8 @@ public class UserService {
 
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -60,6 +65,23 @@ public class UserService {
 
     public void delete(Long id) {
         userMapper.deleteById(id);
+    }
+
+    public List<Long> getUserRoleIds(Long userId) {
+        return userRoleMapper.selectRoleIdsByUserId(userId);
+    }
+
+    @Transactional
+    public void assignRoles(Long userId, List<Long> roleIds) {
+        userRoleMapper.delete(new LambdaQueryWrapper<UserRole>().eq(UserRole::getUserId, userId));
+        if (roleIds != null) {
+            for (Long roleId : roleIds) {
+                UserRole ur = new UserRole();
+                ur.setUserId(userId);
+                ur.setRoleId(roleId);
+                userRoleMapper.insert(ur);
+            }
+        }
     }
 
     private UserDTO buildDTO(User user) {

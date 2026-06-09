@@ -16,9 +16,10 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
+          <el-button size="small" @click="openPermissionDialog(row)">权限</el-button>
           <el-button size="small" type="danger" @click="handleDelete(row.id)" :disabled="row.isSystem">
             删除
           </el-button>
@@ -43,6 +44,21 @@
         <el-button type="primary" @click="handleSave" :loading="saving">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="permDialogVisible" title="配置权限" width="400px">
+      <el-tree
+        ref="permTreeRef"
+        :data="permTree"
+        show-checkbox
+        node-key="id"
+        :props="{ label: 'name', children: 'children' }"
+        default-expand-all
+      />
+      <template #footer>
+        <el-button @click="permDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSavePermissions" :loading="permSaving">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -50,6 +66,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
+import { getRoleList, getRolePermissions, assignRolePermissions } from '@/api/role'
+import type { ElTree } from 'element-plus'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -57,6 +75,12 @@ const roleList = ref<any[]>([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref()
+
+const permDialogVisible = ref(false)
+const permSaving = ref(false)
+const permTreeRef = ref<InstanceType<typeof ElTree>>()
+const permTree = ref<any[]>([])
+const currentRoleId = ref<number | null>(null)
 
 const form = reactive({
   id: null as number | null,
@@ -109,5 +133,54 @@ async function handleDelete(id: number) {
   await request.delete(`/roles/${id}`)
   ElMessage.success('删除成功')
   fetchRoles()
+}
+
+async function openPermissionDialog(row: any) {
+  currentRoleId.value = row.id
+  // 加载权限树
+  try {
+    const res: any = await request.get('/permissions/list')
+    const allPerms = res.data || []
+    permTree.value = buildPermTree(allPerms)
+  } catch {}
+  // 加载已分配的权限ID
+  try {
+    const res: any = await getRolePermissions(row.id)
+    const checkedIds = res.data || []
+    // 设置树勾选状态
+    await nextTick()
+    permTreeRef.value?.setCheckedKeys(checkedIds)
+  } catch {}
+  permDialogVisible.value = true
+}
+
+function buildPermTree(perms: any[]): any[] {
+  if (!perms.length) return []
+  const roots = perms.filter(p => !p.parentId || p.parentId === 0)
+  return roots.map(root => ({
+    ...root,
+    children: perms.filter(p => p.parentId === root.id).map(child => ({
+      ...child,
+      children: perms.filter(p => p.parentId === child.id),
+    })),
+  }))
+}
+
+async function handleSavePermissions() {
+  if (!currentRoleId.value) return
+  permSaving.value = true
+  try {
+    const checkedIds = (permTreeRef.value?.getCheckedKeys() || []) as number[]
+    const halfCheckedIds = (permTreeRef.value?.getHalfCheckedKeys() || []) as number[]
+    await assignRolePermissions(currentRoleId.value, [...checkedIds, ...halfCheckedIds])
+    ElMessage.success('权限配置成功')
+    permDialogVisible.value = false
+  } finally {
+    permSaving.value = false
+  }
+}
+
+function nextTick() {
+  return new Promise(resolve => setTimeout(resolve, 0))
 }
 </script>

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -44,6 +45,17 @@ public class RoleController {
     @DeleteMapping("/{id}")
     public Result<?> delete(@PathVariable Long id) {
         roleService.delete(id);
+        return Result.ok();
+    }
+
+    @GetMapping("/{id}/permissions")
+    public Result<List<Long>> getPermissions(@PathVariable Long id) {
+        return Result.ok(roleService.getPermissionIds(id));
+    }
+
+    @PutMapping("/{id}/permissions")
+    public Result<?> assignPermissions(@PathVariable Long id, @RequestBody Map<String, List<Long>> body) {
+        roleService.assignPermissions(id, body.get("permissionIds"));
         return Result.ok();
     }
 }

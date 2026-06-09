@@ -24,7 +24,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
           <el-button size="small" type="danger" @click="handleDelete(row.id)">删除</el-button>
@@ -42,7 +42,7 @@
       @change="fetchUsers"
     />
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="560px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户名" prop="username">
           <el-input v-model="form.username" />
@@ -66,6 +66,11 @@
             <el-option label="学生" value="STUDENT" />
           </el-select>
         </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="form.roleIds" multiple style="width: 100%" placeholder="选择角色">
+            <el-option v-for="r in roleList" :key="r.id" :label="r.name" :value="r.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-switch v-model="form.status" :active-value="1" :inactive-value="0" />
         </el-form-item>
@@ -81,6 +86,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { getUserPage, createUser, updateUser, deleteUser } from '@/api/user'
+import { getRoleList, assignUserRoles, getUserRoles } from '@/api/role'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 
@@ -91,6 +97,7 @@ const total = ref(0)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref<FormInstance>()
+const roleList = ref<any[]>([])
 
 const query = reactive({ page: 1, size: 10, tenantId: 0 })
 
@@ -104,6 +111,7 @@ const form = reactive({
   userType: 'TEACHER',
   status: 1,
   tenantId: 0,
+  roleIds: [] as number[],
 })
 
 const rules: FormRules = {
@@ -111,7 +119,17 @@ const rules: FormRules = {
   userType: [{ required: true, message: '请选择类型', trigger: 'change' }],
 }
 
-onMounted(() => fetchUsers())
+onMounted(() => {
+  fetchUsers()
+  fetchRoles()
+})
+
+async function fetchRoles() {
+  try {
+    const res: any = await getRoleList(0)
+    roleList.value = res.data
+  } catch {}
+}
 
 async function fetchUsers() {
   loading.value = true
@@ -124,12 +142,17 @@ async function fetchUsers() {
   }
 }
 
-function openDialog(row: any) {
+async function openDialog(row: any) {
   isEdit.value = !!row
   if (row) {
-    Object.assign(form, row, { password: '' })
+    Object.assign(form, row, { password: '', roleIds: [] })
+    // 加载已分配的角色
+    try {
+      const res: any = await getUserRoles(row.id)
+      form.roleIds = res.data || []
+    } catch {}
   } else {
-    Object.assign(form, { id: null, username: '', password: '', realName: '', email: '', phone: '', userType: 'TEACHER', status: 1, tenantId: 0 })
+    Object.assign(form, { id: null, username: '', password: '', realName: '', email: '', phone: '', userType: 'TEACHER', status: 1, tenantId: 0, roleIds: [] })
   }
   dialogVisible.value = true
 }
@@ -141,9 +164,20 @@ async function handleSave() {
   try {
     if (isEdit.value) {
       await updateUser(form)
+      // 保存角色分配
+      await assignUserRoles(form.id!, form.roleIds)
       ElMessage.success('更新成功')
     } else {
-      await createUser(form)
+      const res: any = await createUser(form)
+      // 新建后需要获取用户ID再分配角色
+      if (form.roleIds.length > 0) {
+        // createUser 不返回ID，需刷新列表后再分配角色
+        await fetchUsers()
+        const created = userList.value.find(u => u.username === form.username)
+        if (created) {
+          await assignUserRoles(created.id, form.roleIds)
+        }
+      }
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false

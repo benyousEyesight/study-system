@@ -8,6 +8,9 @@ import com.study.auth.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -49,6 +52,17 @@ public class UserController {
     @PutMapping("/{id}/password")
     public Result<?> updatePassword(@PathVariable Long id, @RequestBody String newPassword) {
         userService.updatePassword(id, newPassword);
+        return Result.ok();
+    }
+
+    @GetMapping("/{id}/roles")
+    public Result<List<Long>> getUserRoles(@PathVariable Long id) {
+        return Result.ok(userService.getUserRoleIds(id));
+    }
+
+    @PutMapping("/{id}/roles")
+    public Result<?> assignRoles(@PathVariable Long id, @RequestBody Map<String, List<Long>> body) {
+        userService.assignRoles(id, body.get("roleIds"));
         return Result.ok();
     }
 }
