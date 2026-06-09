@@ -30,7 +30,7 @@
       <el-table-column prop="paperTitle" label="关联试卷" min-width="150" />
       <el-table-column label="时间模式" width="100">
         <template #default="{ row }">
-          {{ { FIXED_WINDOW: '固定时段', FLEXIBLE: '灵活时长', BOTH: '两者' }[row.timeMode] || row.timeMode }}
+          {{ { FIXED_WINDOW: '固定时段', FLEXIBLE: '灵活时长', BOTH: '两者' }[row.timeMode as string] || row.timeMode }}
         </template>
       </el-table-column>
       <el-table-column label="开始时间" width="160">

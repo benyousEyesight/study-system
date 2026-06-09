@@ -9,7 +9,7 @@
       <el-descriptions :column="2" border>
         <el-descriptions-item label="考试名称" :span="2">{{ exam.title }}</el-descriptions-item>
         <el-descriptions-item label="关联试卷">{{ exam.paperTitle }}</el-descriptions-item>
-        <el-descriptions-item label="时间模式">{{ {FIXED_WINDOW:'固定时段',FLEXIBLE:'灵活时长',BOTH:'两者'}[exam.timeMode] }}</el-descriptions-item>
+        <el-descriptions-item label="时间模式">{{ {FIXED_WINDOW:'固定时段',FLEXIBLE:'灵活时长',BOTH:'两者'}[exam.timeMode as string] }}</el-descriptions-item>
         <el-descriptions-item label="开始时间">{{ exam.startTime || '-' }}</el-descriptions-item>
         <el-descriptions-item label="结束时间">{{ exam.endTime || '-' }}</el-descriptions-item>
         <el-descriptions-item label="作答时长">{{ exam.durationMinutes || '-' }}分钟</el-descriptions-item>
@@ -25,7 +25,7 @@
       <template #header><span>分配列表</span></template>
       <el-table :data="assignments" border stripe>
         <el-table-column prop="assignType" label="分配方式" width="120">
-          <template #default="{row}">{{ {USER:'用户',ROLE:'角色',EXAM_CODE:'考试码'}[row.assignType] }}</template>
+          <template #default="{row}">{{ {USER:'用户',ROLE:'角色',EXAM_CODE:'考试码'}[row.assignType as string] }}</template>
         </el-table-column>
         <el-table-column prop="assigneeId" label="分配对象ID" />
       </el-table>

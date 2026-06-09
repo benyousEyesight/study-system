@@ -13,7 +13,7 @@
       <el-table-column prop="userId" label="学生ID" width="100" />
       <el-table-column prop="submittedAt" label="提交时间" width="170" />
       <el-table-column prop="status" label="状态" width="100">
-        <template #default="{row}">{{ {SUBMITTED:'待批改',GRADING:'批改中',GRADED:'已批改'}[row.status] }}</template>
+        <template #default="{row}">{{ {SUBMITTED:'待批改',GRADING:'批改中',GRADED:'已批改'}[row.status as string] }}</template>
       </el-table-column>
       <el-table-column label="操作" width="120">
         <template #default="{ row }">

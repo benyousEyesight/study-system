@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getSessionData, saveAnswer, submitExam, heartbeat } from '@/api/exam'
+import { getSessionData, saveAnswer as submitAnswerApi, submitExam, heartbeat } from '@/api/exam'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ExamTimer from './components/ExamTimer.vue'
 import QuestionNavigator from './components/QuestionNavigator.vue'
@@ -120,7 +120,7 @@ function getAnswer(questionId: number): string | undefined {
 async function saveAnswer(q: any, val: string) {
   answers.value[q.questionId] = val
   try {
-    await saveAnswer(sessionData.value.id, {
+    await submitAnswerApi(sessionData.value.id, {
       questionId: q.questionId,
       sectionId: currentSection.value?.id,
       answerJson: val,
