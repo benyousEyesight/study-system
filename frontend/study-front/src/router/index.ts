@@ -33,6 +33,12 @@ const router = createRouter({
           meta: { title: '角色管理' },
         },
         {
+          path: 'system/accounts',
+          name: 'Accounts',
+          component: () => import('@/views/system/AccountView.vue'),
+          meta: { title: '账户管理' },
+        },
+        {
           path: 'questions',
           name: 'Questions',
           component: () => import('@/views/question/QuestionListView.vue'),
