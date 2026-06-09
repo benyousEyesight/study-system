@@ -48,7 +48,8 @@ public class ExamSessionService {
     @Autowired
     private PaperQuestionMapper paperQuestionMapper;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 获取学生可见的考试列表
@@ -503,24 +504,45 @@ public class ExamSessionService {
         return Set.of("SINGLE_CHOICE", "MULTIPLE_CHOICE", "TRUE_FALSE", "FILL_BLANK").contains(type);
     }
 
+    private String normalizeAnswer(String raw) {
+        if (raw == null) return null;
+        // 尝试解析JSON字符串，取出原始值
+        try {
+            return objectMapper.readValue(raw, String.class);
+        } catch (Exception ignored) {}
+        return raw;
+    }
+
+    private String extractCorrectAnswer(String correctAnswer) {
+        if (correctAnswer == null) return null;
+        try {
+            Map<String, Object> parsed = objectMapper.readValue(correctAnswer, new TypeReference<Map<String, Object>>() {});
+            if (parsed.containsKey("correct")) {
+                Object val = parsed.get("correct");
+                return val != null ? val.toString() : null;
+            }
+        } catch (Exception ignored) {}
+        return correctAnswer;
+    }
+
     private boolean gradeAnswer(String type, String studentAnswer, String correctAnswer) {
         if (studentAnswer == null || correctAnswer == null) return false;
         try {
             switch (type) {
                 case "SINGLE_CHOICE":
                 case "TRUE_FALSE":
-                    return studentAnswer.trim().equalsIgnoreCase(correctAnswer.trim());
+                    return normalizeAnswer(studentAnswer).trim().equalsIgnoreCase(extractCorrectAnswer(correctAnswer).trim());
                 case "MULTIPLE_CHOICE":
-                    Set<String> sSet = objectMapper.readValue(studentAnswer, new TypeReference<Set<String>>() {});
-                    Set<String> cSet = objectMapper.readValue(correctAnswer, new TypeReference<Set<String>>() {});
+                    Set<String> sSet = objectMapper.readValue(normalizeAnswer(studentAnswer), new TypeReference<Set<String>>() {});
+                    Set<String> cSet = objectMapper.readValue(extractCorrectAnswer(correctAnswer), new TypeReference<Set<String>>() {});
                     return sSet.equals(cSet);
                 case "FILL_BLANK":
-                    return studentAnswer.trim().equals(correctAnswer.trim());
+                    return normalizeAnswer(studentAnswer).trim().equals(extractCorrectAnswer(correctAnswer).trim());
                 default:
                     return false;
             }
         } catch (Exception e) {
-            return studentAnswer.trim().equals(correctAnswer.trim());
+            return normalizeAnswer(studentAnswer).trim().equals(extractCorrectAnswer(correctAnswer).trim());
         }
     }
 }

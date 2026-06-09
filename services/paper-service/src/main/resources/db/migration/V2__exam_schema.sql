@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS exam (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    tenant_id BIGINT NOT NULL,
+    tenant_id BIGINT DEFAULT 0,
     paper_id BIGINT NOT NULL,
     title VARCHAR(200) NOT NULL COMMENT '考试名称',
     description TEXT COMMENT '考试说明',

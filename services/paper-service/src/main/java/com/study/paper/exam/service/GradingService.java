@@ -105,6 +105,7 @@ public class GradingService {
             r.setQuestionType(answer.getQuestionType());
             r.setStudentAnswer(answer.getAnswerJson());
             r.setScore(answer.getScore());
+            r.setIsCorrect(answer.getIsCorrect());
             r.setGradingStatus(answer.getGradingStatus());
             r.setGraderComment(answer.getGraderComment());
 

@@ -26,9 +26,9 @@ public class ExamController {
     }
 
     @PostMapping
-    public Result<?> create(@Valid @RequestBody ExamCreateDTO dto) {
-        examService.create(dto);
-        return Result.ok();
+    public Result<Long> create(@Valid @RequestBody ExamCreateDTO dto) {
+        Long id = examService.create(dto);
+        return Result.ok(id);
     }
 
     @PutMapping("/{id}")

@@ -18,7 +18,7 @@ public interface ExamAnswerMapper extends BaseMapper<ExamAnswer> {
     @Select("<script>" +
             "SELECT q.id, q.type, q.content_json AS contentJson, q.answer_json AS answerJson, q.difficulty " +
             "FROM question_db.question q WHERE q.id IN " +
-            "<foreach collection='ids' item='id' open='(' separator=',' close=''>#{id}</foreach>" +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
             "</script>")
     List<Map<String, Object>> selectQuestionsByIds(@Param("ids") List<Long> ids);
 }

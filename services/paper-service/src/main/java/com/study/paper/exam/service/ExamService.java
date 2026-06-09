@@ -76,7 +76,7 @@ public class ExamService {
     }
 
     @Transactional
-    public void create(ExamCreateDTO dto) {
+    public Long create(ExamCreateDTO dto) {
         Exam exam = new Exam();
         BeanUtils.copyProperties(dto, exam);
         exam.setStatus(dto.getStatus() != null ? dto.getStatus() : "DRAFT");
@@ -91,6 +91,7 @@ public class ExamService {
                 assignmentMapper.insert(assignment);
             }
         }
+        return exam.getId();
     }
 
     @Transactional
