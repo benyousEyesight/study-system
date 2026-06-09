@@ -6,9 +6,11 @@ import com.study.auth.common.BusinessException;
 import com.study.auth.mapper.RoleMapper;
 import com.study.auth.mapper.RolePermissionMapper;
 import com.study.auth.mapper.UserMapper;
+import com.study.auth.mapper.UserRoleMapper;
 import com.study.auth.model.dto.PageResult;
 import com.study.auth.model.entity.Role;
 import com.study.auth.model.entity.RolePermission;
+import com.study.auth.model.entity.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ public class RoleService {
     private RoleMapper roleMapper;
     @Autowired
     private RolePermissionMapper rolePermissionMapper;
+    @Autowired
+    private UserRoleMapper userRoleMapper;
     @Autowired
     private UserMapper userMapper;
 
@@ -61,6 +65,23 @@ public class RoleService {
         }
         rolePermissionMapper.delete(new LambdaQueryWrapper<RolePermission>().eq(RolePermission::getRoleId, id));
         roleMapper.deleteById(id);
+    }
+
+    public List<Long> getUserIdsByRole(Long roleId) {
+        return userRoleMapper.selectUserIdsByRoleId(roleId);
+    }
+
+    @Transactional
+    public void assignUsers(Long roleId, List<Long> userIds) {
+        userRoleMapper.delete(new LambdaQueryWrapper<UserRole>().eq(UserRole::getRoleId, roleId));
+        if (userIds != null) {
+            for (Long uid : userIds) {
+                UserRole ur = new UserRole();
+                ur.setRoleId(roleId);
+                ur.setUserId(uid);
+                userRoleMapper.insert(ur);
+            }
+        }
     }
 
     public List<Long> getPermissionIds(Long roleId) {

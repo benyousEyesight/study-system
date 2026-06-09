@@ -18,6 +18,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @GetMapping("/list")
+    public Result<List<UserDTO>> list(@RequestParam Long tenantId) {
+        return Result.ok(userService.list(tenantId));
+    }
+
     @GetMapping("/page")
     public Result<PageResult<UserDTO>> page(
             @RequestParam(defaultValue = "1") int page,

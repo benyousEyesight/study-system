@@ -58,4 +58,15 @@ public class RoleController {
         roleService.assignPermissions(id, body.get("permissionIds"));
         return Result.ok();
     }
+
+    @GetMapping("/{id}/users")
+    public Result<List<Long>> getUsers(@PathVariable Long id) {
+        return Result.ok(roleService.getUserIdsByRole(id));
+    }
+
+    @PutMapping("/{id}/users")
+    public Result<?> assignUsers(@PathVariable Long id, @RequestBody Map<String, List<Long>> body) {
+        roleService.assignUsers(id, body.get("userIds"));
+        return Result.ok();
+    }
 }

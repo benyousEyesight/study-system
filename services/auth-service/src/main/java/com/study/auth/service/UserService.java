@@ -28,6 +28,12 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public List<UserDTO> list(Long tenantId) {
+        return userMapper.selectList(
+                new LambdaQueryWrapper<User>().eq(User::getTenantId, tenantId))
+                .stream().map(this::buildDTO).collect(Collectors.toList());
+    }
+
     public PageResult<UserDTO> page(int pageNum, int size, Long tenantId) {
         Page<User> p = userMapper.selectPage(new Page<>(pageNum, size),
                 new LambdaQueryWrapper<User>().eq(User::getTenantId, tenantId));

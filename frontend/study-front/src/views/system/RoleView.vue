@@ -16,10 +16,11 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="260" fixed="right">
+      <el-table-column label="操作" width="340" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openDialog(row)">编辑</el-button>
           <el-button size="small" @click="openPermissionDialog(row)">权限</el-button>
+          <el-button size="small" @click="openUserDialog(row)">用户</el-button>
           <el-button size="small" type="danger" @click="handleDelete(row.id)" :disabled="row.isSystem">
             删除
           </el-button>
@@ -45,7 +46,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="permDialogVisible" title="配置权限" width="400px">
+    <el-dialog v-model="permDialogVisible" title="配置权限" width="520px">
       <el-tree
         ref="permTreeRef"
         :data="permTree"
@@ -59,6 +60,20 @@
         <el-button type="primary" @click="handleSavePermissions" :loading="permSaving">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="userDialogVisible" title="授权用户" width="600px">
+      <el-transfer
+        v-model="selectedUserIds"
+        :data="allUsers"
+        :titles="['未授权', '已授权']"
+        filterable
+        filter-placeholder="搜索用户"
+      />
+      <template #footer>
+        <el-button @click="userDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveUsers" :loading="userSaving">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -66,7 +81,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/api/request'
-import { getRoleList, getRolePermissions, assignRolePermissions } from '@/api/role'
+import { getRolePermissions, assignRolePermissions } from '@/api/role'
 import type { ElTree } from 'element-plus'
 
 const loading = ref(false)
@@ -81,6 +96,11 @@ const permSaving = ref(false)
 const permTreeRef = ref<InstanceType<typeof ElTree>>()
 const permTree = ref<any[]>([])
 const currentRoleId = ref<number | null>(null)
+
+const userDialogVisible = ref(false)
+const userSaving = ref(false)
+const allUsers = ref<any[]>([])
+const selectedUserIds = ref<number[]>([])
 
 const form = reactive({
   id: null as number | null,
@@ -137,17 +157,13 @@ async function handleDelete(id: number) {
 
 async function openPermissionDialog(row: any) {
   currentRoleId.value = row.id
-  // 加载权限树
   try {
     const res: any = await request.get('/permissions/list')
-    const allPerms = res.data || []
-    permTree.value = buildPermTree(allPerms)
+    permTree.value = buildPermTree(res.data || [])
   } catch {}
-  // 加载已分配的权限ID
   try {
     const res: any = await getRolePermissions(row.id)
     const checkedIds = res.data || []
-    // 设置树勾选状态
     await nextTick()
     permTreeRef.value?.setCheckedKeys(checkedIds)
   } catch {}
@@ -177,6 +193,37 @@ async function handleSavePermissions() {
     permDialogVisible.value = false
   } finally {
     permSaving.value = false
+  }
+}
+
+async function openUserDialog(row: any) {
+  currentRoleId.value = row.id
+  selectedUserIds.value = []
+  // 加载所有用户
+  try {
+    const res: any = await request.get('/users/list', { params: { tenantId: 0 } })
+    allUsers.value = (res.data || []).map((u: any) => ({
+      key: u.id,
+      label: `${u.realName || u.username} (${u.username})`,
+    }))
+  } catch {}
+  // 加载已授权的用户ID
+  try {
+    const res: any = await request.get(`/roles/${row.id}/users`)
+    selectedUserIds.value = res.data || []
+  } catch {}
+  userDialogVisible.value = true
+}
+
+async function handleSaveUsers() {
+  if (!currentRoleId.value) return
+  userSaving.value = true
+  try {
+    await request.put(`/roles/${currentRoleId.value}/users`, { userIds: selectedUserIds.value })
+    ElMessage.success('用户授权成功')
+    userDialogVisible.value = false
+  } finally {
+    userSaving.value = false
   }
 }
 

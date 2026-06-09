@@ -12,4 +12,7 @@ public interface UserRoleMapper extends BaseMapper<UserRole> {
 
     @Select("SELECT role_id FROM user_role WHERE user_id = #{userId}")
     List<Long> selectRoleIdsByUserId(Long userId);
+
+    @Select("SELECT user_id FROM user_role WHERE role_id = #{roleId}")
+    List<Long> selectUserIdsByRoleId(Long roleId);
 }
