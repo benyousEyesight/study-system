@@ -17,7 +17,7 @@ public interface ExternalQuestionRefMapper {
     @Select("<script>" +
             "SELECT id, type, content_json AS contentJson, difficulty, status " +
             "FROM question_db.question WHERE id IN " +
-            "<foreach collection='ids' item='id' open='(' separator=',' close=''>#{id}</foreach>" +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
             "</script>")
     List<Map<String, Object>> selectQuestionsByIds(@Param("ids") List<Long> ids);
 
@@ -31,7 +31,7 @@ public interface ExternalQuestionRefMapper {
             "<if test='kpIds != null and kpIds.size() &gt; 0'>" +
             " AND q.id IN (SELECT qkp.question_id FROM question_db.question_kp qkp " +
             " WHERE qkp.knowledge_point_id IN " +
-            "<foreach collection='kpIds' item='kpId' open='(' separator=',' close=''>#{kpId}</foreach>" +
+            "<foreach collection='kpIds' item='kpId' open='(' separator=',' close=')'>#{kpId}</foreach>" +
             " GROUP BY qkp.question_id HAVING COUNT(DISTINCT qkp.knowledge_point_id) = #{kpCount})" +
             "</if>" +
             "</script>")
