@@ -36,6 +36,17 @@
           <el-menu-item index="/questions">题目列表</el-menu-item>
           <el-menu-item index="/questions/create">创建题目</el-menu-item>
         </el-sub-menu>
+
+        <el-sub-menu index="paper">
+          <template #title>
+            <el-icon><Document /></el-icon>
+            <span>试卷管理</span>
+          </template>
+          <el-menu-item index="/papers">试卷列表</el-menu-item>
+          <el-menu-item index="/papers/create">创建试卷</el-menu-item>
+          <el-menu-item index="/paper-templates">组卷模板</el-menu-item>
+          <el-menu-item index="/paper-templates/create">创建模板</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     <el-container>
@@ -74,7 +85,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Odometer, Setting, Notebook, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
+import { Odometer, Setting, Notebook, Document, Fold, Expand, ArrowDown } from '@element-plus/icons-vue'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import { removeToken } from '@/utils/token'

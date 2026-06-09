@@ -18,3 +18,7 @@ Thumbs.db
 
 # Maven wrapper
 .mvn/
+
+# Logs
+*.log
+logs/

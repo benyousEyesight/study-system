@@ -38,5 +38,6 @@
         <module>services/gateway</module>
         <module>services/auth-service</module>
         <module>services/question-service</module>
+        <module>services/paper-service</module>
     </modules>
 </project>

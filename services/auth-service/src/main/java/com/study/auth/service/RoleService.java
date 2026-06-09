@@ -33,6 +33,15 @@ public class RoleService {
     }
 
     public void create(Role role) {
+        if (role.getTenantId() == null) {
+            role.setTenantId(0L);
+        }
+        if (role.getStatus() == null) {
+            role.setStatus(1);
+        }
+        if (role.getIsSystem() == null) {
+            role.setIsSystem(0);
+        }
         roleMapper.insert(role);
     }
 

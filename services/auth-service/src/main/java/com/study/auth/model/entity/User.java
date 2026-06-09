@@ -1,6 +1,7 @@
 package com.study.auth.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -12,6 +13,8 @@ public class User {
     private Long tenantId;
     private String username;
     private String passwordHash;
+    @TableField(exist = false)
+    private String password;
     private String realName;
     private String email;
     private String phone;

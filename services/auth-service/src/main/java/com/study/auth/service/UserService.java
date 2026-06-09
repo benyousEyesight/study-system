@@ -2,6 +2,7 @@ package com.study.auth.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.study.auth.common.BusinessException;
 import com.study.auth.mapper.UserMapper;
 import com.study.auth.model.dto.PageResult;
 import com.study.auth.model.dto.UserDTO;
@@ -35,6 +36,12 @@ public class UserService {
     }
 
     public void create(User user) {
+        if (user.getPasswordHash() == null) {
+            user.setPasswordHash(user.getPassword());
+        }
+        if (user.getPasswordHash() == null || user.getPasswordHash().isBlank()) {
+            throw new BusinessException(400, "密码不能为空");
+        }
         user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         userMapper.insert(user);
     }
