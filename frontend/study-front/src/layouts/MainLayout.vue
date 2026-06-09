@@ -46,6 +46,9 @@
           <el-menu-item index="/papers/create">创建试卷</el-menu-item>
           <el-menu-item index="/paper-templates">组卷模板</el-menu-item>
           <el-menu-item index="/paper-templates/create">创建模板</el-menu-item>
+          <el-menu-item index="/exams">考试安排</el-menu-item>
+          <el-menu-item index="/my-exams">我的考试</el-menu-item>
+          <el-menu-item index="/grading/exams">批改管理</el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
