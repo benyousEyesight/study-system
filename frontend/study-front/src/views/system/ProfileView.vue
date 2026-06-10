@@ -74,37 +74,41 @@
         <el-card shadow="never" style="margin-top: 16px" v-if="isStudent && subjects.length > 0">
           <template #header>学科分析</template>
 
-          <div class="subject-section" v-if="strongSubjects.length > 0">
-            <div class="subject-group-label">擅长学科</div>
-            <div class="subject-tags">
-              <el-tag
-                v-for="s in strongSubjects"
-                :key="s.subjectId"
-                type="success"
-                size="large"
-                style="margin: 0 8px 8px 0"
-              >
-                {{ s.subjectName }} ({{ s.accuracy }}%)
-              </el-tag>
+          <div style="display:flex;gap:24px;flex-wrap:wrap">
+            <div ref="radarRef" style="width:360px;height:300px;flex-shrink:0"></div>
+            <div style="flex:1;min-width:200px">
+              <div class="subject-section">
+                <div class="subject-group-label">各科得分率</div>
+                <div class="subject-tags">
+                  <div v-for="s in subjects" :key="s.subjectId" class="subject-bar">
+                    <span class="sb-label">{{ s.subjectName }}</span>
+                    <div class="sb-track">
+                      <div class="sb-fill" :style="{ width: s.accuracy + '%', background: subjectColor(s.accuracy) }" />
+                    </div>
+                    <span class="sb-value" :style="{ color: subjectColor(s.accuracy) }">{{ s.accuracy }}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="subject-section" v-if="strongSubjects.length > 0" style="margin-top:12px">
+                <div class="subject-group-label">擅长学科</div>
+                <div class="subject-tags">
+                  <el-tag v-for="s in strongSubjects" :key="s.subjectId" type="success" size="large" style="margin:0 8px 8px 0">
+                    {{ s.subjectName }} ({{ s.accuracy }}%)
+                  </el-tag>
+                </div>
+              </div>
+
+              <div class="subject-section" v-if="weakSubjects.length > 0" style="margin-top:12px">
+                <div class="subject-group-label">薄弱学科</div>
+                <div class="subject-tags">
+                  <el-tag v-for="s in weakSubjects" :key="s.subjectId" type="danger" size="large" style="margin:0 8px 8px 0">
+                    {{ s.subjectName }} ({{ s.accuracy }}%)
+                  </el-tag>
+                </div>
+              </div>
             </div>
           </div>
-
-          <div class="subject-section" v-if="weakSubjects.length > 0" style="margin-top: 12px">
-            <div class="subject-group-label">薄弱学科</div>
-            <div class="subject-tags">
-              <el-tag
-                v-for="s in weakSubjects"
-                :key="s.subjectId"
-                type="danger"
-                size="large"
-                style="margin: 0 8px 8px 0"
-              >
-                {{ s.subjectName }} ({{ s.accuracy }}%)
-              </el-tag>
-            </div>
-          </div>
-
-          <el-empty v-if="subjects.length === 0" description="暂无学科数据" />
         </el-card>
 
         <!-- 最近考试 -->
@@ -136,11 +140,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { getProfile, uploadAvatar } from '@/api/profile'
 import { getStudentOverview, getStudentSubjects, getStudentRecentExams } from '@/api/student'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import * as echarts from 'echarts'
 
 const userStore = useUserStore()
 const userInfo = ref<any>(null)
@@ -150,6 +155,8 @@ const overview = ref<any>(null)
 const subjects = ref<any[]>([])
 const recentExams = ref<any[]>([])
 const recentLoading = ref(false)
+const radarRef = ref<HTMLElement | null>(null)
+let radarChart: any = null
 
 const isStudent = computed(() => userInfo.value?.userType === 'STUDENT')
 
@@ -200,6 +207,7 @@ async function fetchSubjects() {
   try {
     const res: any = await getStudentSubjects()
     subjects.value = res.data || []
+    renderRadar()
   } catch {}
 }
 
@@ -225,6 +233,35 @@ async function handleAvatarUpload(file: File) {
     uploading.value = false
   }
   return false
+}
+
+function subjectColor(accuracy: number) {
+  if (accuracy >= 80) return '#67C23A'
+  if (accuracy >= 60) return '#E6A23C'
+  return '#F56C6C'
+}
+
+function renderRadar() {
+  if (!radarRef.value || subjects.value.length === 0) return
+  nextTick(() => {
+    if (radarChart) radarChart.dispose()
+    radarChart = echarts.init(radarRef.value)
+    radarChart.setOption({
+      radar: {
+        indicator: subjects.value.map(s => ({ name: s.subjectName, max: 100 })),
+        shape: 'polygon',
+        splitArea: { areaStyle: { color: ['rgba(64,158,255,0.02)', 'rgba(64,158,255,0.05)'] } },
+        axisLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
+        splitLine: { lineStyle: { color: 'rgba(0,0,0,0.1)' } },
+      },
+      series: [{
+        type: 'radar',
+        data: [{ value: subjects.value.map(s => s.accuracy), name: '得分率', areaStyle: { color: 'rgba(64,158,255,0.2)' }, lineStyle: { color: '#409EFF', width: 2 }, itemStyle: { color: '#409EFF' } }],
+        symbol: 'circle',
+        symbolSize: 6,
+      }],
+    })
+  })
 }
 
 function typeLabel(type: string) {
@@ -325,6 +362,36 @@ onMounted(() => {
   text-align: center;
   color: #999;
   margin-top: 40px;
+}
+.subject-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.sb-label {
+  width: 60px;
+  font-size: 13px;
+  color: #606266;
+  text-align: right;
+  flex-shrink: 0;
+}
+.sb-track {
+  flex: 1;
+  height: 16px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sb-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.6s ease;
+}
+.sb-value {
+  width: 40px;
+  font-size: 13px;
+  font-weight: 500;
 }
 :deep(.rank-first) {
   color: #f56c6c;
