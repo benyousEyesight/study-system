@@ -39,6 +39,18 @@ const router = createRouter({
           meta: { title: '账户管理' },
         },
         {
+          path: 'system/grades',
+          name: 'Grades',
+          component: () => import('@/views/system/GradeView.vue'),
+          meta: { title: '年级管理' },
+        },
+        {
+          path: 'system/classes',
+          name: 'Classes',
+          component: () => import('@/views/system/ClassView.vue'),
+          meta: { title: '班级管理' },
+        },
+        {
           path: 'profile',
           name: 'Profile',
           component: () => import('@/views/system/ProfileView.vue'),

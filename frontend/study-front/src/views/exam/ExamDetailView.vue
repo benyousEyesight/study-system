@@ -25,7 +25,7 @@
       <template #header><span>分配列表</span></template>
       <el-table :data="assignments" border stripe>
         <el-table-column prop="assignType" label="分配方式" width="120">
-          <template #default="{row}">{{ {USER:'用户',ROLE:'角色',EXAM_CODE:'考试码'}[row.assignType as string] }}</template>
+          <template #default="{row}">{{ {USER:'用户',ROLE:'角色',CLASS:'班级',EXAM_CODE:'考试码'}[row.assignType as string] || row.assignType }}</template>
         </el-table-column>
         <el-table-column prop="assigneeId" label="分配对象ID" />
       </el-table>

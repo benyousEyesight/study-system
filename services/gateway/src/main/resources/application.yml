@@ -10,7 +10,7 @@ spring:
         - id: auth-service
           uri: http://localhost:8081
           predicates:
-            - Path=/api/auth/**,/api/users/**,/api/roles/**,/api/permissions/**,/api/tenants/**
+            - Path=/api/auth/**,/api/users/**,/api/roles/**,/api/permissions/**,/api/tenants/**,/api/grades/**,/api/clazzes/**
         - id: question-service
           uri: http://localhost:8082
           predicates:

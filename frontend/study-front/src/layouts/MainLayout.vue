@@ -26,6 +26,8 @@
           <el-menu-item index="/system/users">用户管理</el-menu-item>
           <el-menu-item index="/system/roles">角色管理</el-menu-item>
           <el-menu-item index="/system/accounts">账户管理</el-menu-item>
+          <el-menu-item index="/system/grades">年级管理</el-menu-item>
+          <el-menu-item index="/system/classes">班级管理</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="question">

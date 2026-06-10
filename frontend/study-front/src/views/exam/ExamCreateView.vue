@@ -45,6 +45,7 @@
       <el-radio-group v-model="assignMode" style="margin-bottom: 12px">
         <el-radio value="USER">按用户</el-radio>
         <el-radio value="ROLE">按角色</el-radio>
+        <el-radio value="CLASS">按班级</el-radio>
         <el-radio value="EXAM_CODE">考试码</el-radio>
       </el-radio-group>
 
@@ -56,6 +57,14 @@
         <el-select v-model="selectedRoles" multiple placeholder="选择角色" style="width: 300px">
           <el-option v-for="r in roles" :key="r.id" :label="r.name" :value="r.id" />
         </el-select>
+      </div>
+      <div v-if="assignMode === 'CLASS'">
+        <el-select v-model="selectedClasses" multiple placeholder="选择班级" style="width: 100%">
+          <el-option-group v-for="g in gradeList" :key="g.id" :label="g.name">
+            <el-option v-for="c in (classesByGrade[g.id] || [])" :key="c.id" :label="c.name" :value="c" />
+          </el-option-group>
+        </el-select>
+        <div style="color:#909399;font-size:12px;margin-top:6px">将分配给学生名单中所有成员</div>
       </div>
       <div v-if="assignMode === 'EXAM_CODE'">
         <el-input v-model="form.examCode" placeholder="输入考试码，留空自动生成" style="width: 300px" />
@@ -86,6 +95,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { createExam, updateExam, getExamById } from '@/api/exam'
 import { getPaperPage } from '@/api/paper'
+import { getGradeList, getClazzList, getClazzStudents } from '@/api/org'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
@@ -97,6 +107,9 @@ const papers = ref<any[]>([])
 const roles = ref<any[]>([])
 const selectedUsers = ref<any[]>([])
 const selectedRoles = ref<number[]>([])
+const selectedClasses = ref<any[]>([])
+const gradeList = ref<any[]>([])
+const classesByGrade = ref<Record<number, any[]>>({})
 const assignMode = ref('EXAM_CODE')
 const antiCheatEnabled = ref(false)
 
@@ -116,6 +129,16 @@ const form = reactive({
 onMounted(async () => {
   const res: any = await getPaperPage({ page: 1, size: 999 })
   papers.value = res.data.records
+
+  // 加载年级班级
+  const gradeRes: any = await getGradeList(0)
+  gradeList.value = gradeRes.data || []
+  const clsRes: any = await getClazzList(0)
+  const allClasses: any[] = (clsRes.data || []).filter((c: any) => c.status === 1)
+  for (const c of allClasses) {
+    if (!classesByGrade.value[c.gradeId]) classesByGrade.value[c.gradeId] = []
+    classesByGrade.value[c.gradeId].push(c)
+  }
 
   if (route.params.id) {
     isEdit.value = true
@@ -140,6 +163,17 @@ async function handleSave() {
       for (const u of selectedUsers.value) payload.assignments.push({ assignType: 'USER', assigneeId: u.id })
     } else if (assignMode.value === 'ROLE') {
       for (const r of selectedRoles.value) payload.assignments.push({ assignType: 'ROLE', assigneeId: r })
+    } else if (assignMode.value === 'CLASS') {
+      const userIds = new Set<number>()
+      for (const clz of selectedClasses.value) {
+        const res: any = await getClazzStudents(clz.id)
+        for (const s of (res.data || [])) {
+          if (s.studentId && !userIds.has(s.studentId)) {
+            userIds.add(s.studentId)
+            payload.assignments.push({ assignType: 'USER', assigneeId: s.studentId })
+          }
+        }
+      }
     }
     if (isEdit.value) {
       await updateExam(Number(route.params.id), payload)
