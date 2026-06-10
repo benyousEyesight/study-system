@@ -2,7 +2,10 @@
   <div v-loading="loading">
     <el-row justify="space-between" align="middle">
       <h3>考试详情</h3>
-      <el-button @click="router.back()">返回</el-button>
+      <div>
+        <el-button type="primary" @click="router.push(`/exams/${route.params.id}/report`)" v-if="exam?.gradedSessions > 0">查看报告</el-button>
+        <el-button @click="router.back()">返回</el-button>
+      </div>
     </el-row>
 
     <el-card style="margin-top: 16px" v-if="exam">

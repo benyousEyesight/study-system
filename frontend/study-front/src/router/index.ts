@@ -135,6 +135,12 @@ const router = createRouter({
           meta: { title: '编辑考试' },
         },
         {
+          path: 'exams/:id/report',
+          name: 'ExamReport',
+          component: () => import('@/views/exam/ExamReportView.vue'),
+          meta: { title: '考试报告' },
+        },
+        {
           path: 'my-exams',
           name: 'MyExams',
           component: () => import('@/views/exam/MyExamsView.vue'),
