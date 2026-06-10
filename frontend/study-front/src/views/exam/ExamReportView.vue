@@ -53,6 +53,40 @@
       </el-table>
     </el-card>
 
+    <!-- 试卷质量 -->
+    <el-card style="margin-top: 16px" v-if="quality">
+      <template #header>试卷质量分析</template>
+      <el-row :gutter="16">
+        <el-col :span="8" v-for="card in qualityCards" :key="card.label">
+          <div class="stat-card">
+            <div class="stat-label">{{ card.label }}</div>
+            <div class="stat-value" :style="{ color: card.color }">{{ card.value }}</div>
+            <div class="stat-desc">{{ card.desc }}</div>
+          </div>
+        </el-col>
+      </el-row>
+
+      <h4 style="margin-top: 20px">各题质量</h4>
+      <el-table :data="quality.questions" border stripe size="small" max-height="400">
+        <el-table-column label="#" prop="sort" width="50" align="center" />
+        <el-table-column label="题型" prop="type" width="100" />
+        <el-table-column label="满分" prop="maxScore" width="60" />
+        <el-table-column label="平均分" prop="avgScore" width="70" />
+        <el-table-column label="难度" width="80">
+          <template #default="{ row }">
+            <el-tag :type="difficultyTag(row.difficulty)" size="small">{{ row.difficulty }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="区分度" width="80">
+          <template #default="{ row }">
+            <el-tag :type="discriminationTag(row.discrimination)" size="small">{{ row.discrimination }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="高分组正确" prop="highGroupCorrect" width="80" align="center" />
+        <el-table-column label="低分组正确" prop="lowGroupCorrect" width="80" align="center" />
+      </el-table>
+    </el-card>
+
     <el-empty v-if="!loading && !report" description="考试不存在" />
   </div>
 </template>
@@ -67,6 +101,7 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const report = ref<any>(null)
+const quality = ref<any>(null)
 const apiBase = (import.meta as any).env.VITE_API_BASE || ''
 
 function exportExcel() {
@@ -102,12 +137,57 @@ const bars = computed(() => {
   ]
 })
 
+const qualityCards = computed(() => {
+  if (!quality.value) return []
+  const q = quality.value
+  return [
+    { label: '难度系数', value: q.difficultyIndex, desc: q.difficultyLabel, color: difficultyColor(q.difficultyIndex) },
+    { label: '区分度', value: q.discriminationIndex, desc: q.discriminationLabel, color: discriminationColor(q.discriminationIndex) },
+    { label: '信度 (Cronbach α)', value: q.reliabilityIndex, desc: q.reliabilityLabel, color: reliabilityColor(q.reliabilityIndex) },
+  ]
+})
+
+function difficultyColor(v: number) {
+  if (v < 0.3) return '#F56C6C'
+  if (v <= 0.7) return '#67C23A'
+  return '#E6A23C'
+}
+function discriminationColor(v: number) {
+  if (v >= 0.4) return '#67C23A'
+  if (v >= 0.2) return '#E6A23C'
+  return '#F56C6C'
+}
+function reliabilityColor(v: number) {
+  if (v >= 0.8) return '#67C23A'
+  if (v >= 0.7) return '#E6A23C'
+  return '#F56C6C'
+}
+function difficultyTag(v: number) {
+  if (v < 0.3) return 'danger'
+  if (v <= 0.7) return 'success'
+  return 'warning'
+}
+function discriminationTag(v: number) {
+  if (v >= 0.4) return 'success'
+  if (v >= 0.2) return 'warning'
+  return 'danger'
+}
+
+async function fetchQuality() {
+  const examId = route.params.id
+  try {
+    const res: any = await (await fetch(apiBase + '/api/stats/exam/' + examId + '/quality')).json()
+    if (res.code === 200) quality.value = res.data
+  } catch { /* ignore */ }
+}
+
 onMounted(async () => {
   loading.value = true
   try {
     const id = Number(route.params.id)
     const res: any = await getExamReport(id)
     report.value = res.data
+    if (res.data) fetchQuality()
   } catch { ElMessage.error('加载报告失败')
   } finally { loading.value = false }
 })
@@ -129,6 +209,11 @@ onMounted(async () => {
 .stat-value {
   font-size: 24px;
   font-weight: bold;
+}
+.stat-desc {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
 }
 .bar-chart {
   display: flex;
