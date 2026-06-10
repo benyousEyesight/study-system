@@ -75,6 +75,12 @@ const router = createRouter({
           meta: { title: '科目管理' },
         },
         {
+          path: 'textbook/import',
+          name: 'TextbookImport',
+          component: () => import('@/views/textbook/TextbookImportView.vue'),
+          meta: { title: '教材导入' },
+        },
+        {
           path: 'papers',
           name: 'Papers',
           component: () => import('@/views/paper/PaperListView.vue'),

@@ -38,6 +38,7 @@
           <el-menu-item index="/subjects">科目管理</el-menu-item>
           <el-menu-item index="/questions">题目列表</el-menu-item>
           <el-menu-item index="/questions/create">创建题目</el-menu-item>
+          <el-menu-item index="/textbook/import">教材导入</el-menu-item>
         </el-sub-menu>
 
         <el-sub-menu index="paper">
