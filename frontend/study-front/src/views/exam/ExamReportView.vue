@@ -2,7 +2,10 @@
   <div v-loading="loading">
     <el-row justify="space-between" align="middle">
       <h3>考试报告</h3>
-      <el-button @click="router.back()">返回</el-button>
+      <div>
+        <el-button type="primary" @click="exportExcel" :disabled="!report">导出 Excel</el-button>
+        <el-button @click="router.back()">返回</el-button>
+      </div>
     </el-row>
 
     <el-card style="margin-top: 16px" v-if="report">
@@ -64,6 +67,13 @@ const router = useRouter()
 const route = useRoute()
 const loading = ref(false)
 const report = ref<any>(null)
+const apiBase = (import.meta as any).env.VITE_API_BASE || ''
+
+function exportExcel() {
+  if (!report.value) return
+  const examId = route.params.id
+  window.open(apiBase + '/api/stats/exam/' + examId + '/export', '_blank')
+}
 
 const summaryCards = computed(() => {
   if (!report.value) return []

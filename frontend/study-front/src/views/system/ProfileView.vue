@@ -115,7 +115,10 @@
         <el-card shadow="never" style="margin-top: 16px" v-if="isStudent && weaknessData.length > 0">
           <template #header>
             <span>知识点薄弱分析</span>
-            <el-button size="small" text :loading="weaknessLoading" @click="fetchWeakness" style="float:right">刷新</el-button>
+            <span style="float:right">
+              <el-button size="small" text @click="exportWeaknessExcel">导出 Excel</el-button>
+              <el-button size="small" text :loading="weaknessLoading" @click="fetchWeakness">刷新</el-button>
+            </span>
           </template>
           <div v-for="subject in weaknessData" :key="subject.subjectId" class="weakness-subject">
             <div class="weakness-subject-header">
@@ -181,6 +184,8 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import * as echarts from 'echarts'
 
+const apiBase = (import.meta as any).env.VITE_API_BASE || ''
+
 const userStore = useUserStore()
 const userInfo = ref<any>(null)
 const uploading = ref(false)
@@ -229,6 +234,10 @@ async function fetchWeakness() {
   } finally {
     weaknessLoading.value = false
   }
+}
+
+function exportWeaknessExcel() {
+  window.open(apiBase + '/api/stats/student/weakness/export', '_blank')
 }
 
 function weaknessColor(accuracy: number) {

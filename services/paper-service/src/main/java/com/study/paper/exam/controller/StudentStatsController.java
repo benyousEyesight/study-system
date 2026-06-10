@@ -3,9 +3,13 @@ package com.study.paper.exam.controller;
 import com.study.paper.common.Result;
 import com.study.paper.exam.model.dto.KpWeaknessVO;
 import com.study.paper.exam.model.dto.StudentStatsVO;
+import com.study.paper.exam.service.ExamExportService;
 import com.study.paper.exam.service.KpWeaknessService;
 import com.study.paper.exam.service.StudentStatsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +22,8 @@ public class StudentStatsController {
     private StudentStatsService studentStatsService;
     @Autowired
     private KpWeaknessService kpWeaknessService;
+    @Autowired
+    private ExamExportService examExportService;
 
     @GetMapping("/overview")
     public Result<StudentStatsVO.Overview> overview(@RequestHeader("X-User-Id") Long userId) {
@@ -52,5 +58,14 @@ public class StudentStatsController {
     public Result<Void> compute(@RequestHeader("X-User-Id") Long userId) {
         kpWeaknessService.computeForStudent(userId);
         return Result.ok();
+    }
+
+    @GetMapping("/weakness/export")
+    public ResponseEntity<byte[]> exportWeakness(@RequestHeader("X-User-Id") Long userId) throws Exception {
+        byte[] excelBytes = examExportService.exportStudentWeakness(userId);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"知识点分析.xlsx\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(excelBytes);
     }
 }
