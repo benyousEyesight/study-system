@@ -2,7 +2,10 @@
   <div v-loading="loading">
     <el-row justify="space-between" align="middle">
       <h3>试卷详情</h3>
-      <el-button @click="router.back()">返回</el-button>
+      <div>
+        <el-button type="primary" @click="router.push(`/papers/${route.params.id}/print`)">导出PDF</el-button>
+        <el-button @click="router.back()">返回</el-button>
+      </div>
     </el-row>
 
     <el-card style="margin-top: 16px" v-if="paper">

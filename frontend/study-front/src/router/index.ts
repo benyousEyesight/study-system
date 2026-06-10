@@ -93,6 +93,12 @@ const router = createRouter({
           meta: { title: '试卷详情' },
         },
         {
+          path: 'papers/:id/print',
+          name: 'PaperPrint',
+          component: () => import('@/views/paper/PaperPrintView.vue'),
+          meta: { title: '打印试卷' },
+        },
+        {
           path: 'paper-templates',
           name: 'PaperTemplates',
           component: () => import('@/views/paper/PaperTemplateView.vue'),
