@@ -99,12 +99,21 @@ async function handleLogin() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #0c3483 0%, #a2b6df 50%, #6b8cce 100%);
+  position: relative;
+  background: url('@/assets/images/login-bg.jpg') center/cover no-repeat;
+}
+.login-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .login-card {
   width: 420px;
   border-radius: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .login-header {
