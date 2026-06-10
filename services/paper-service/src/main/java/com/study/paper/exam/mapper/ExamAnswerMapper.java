@@ -30,4 +30,21 @@ public interface ExamAnswerMapper extends BaseMapper<ExamAnswer> {
             "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
             "</script>")
     List<Map<String, Object>> selectQuestionSubjects(@Param("ids") List<Long> ids);
+
+    @Select("<script>" +
+            "SELECT qk.question_id AS questionId, kp.id AS kpId, kp.name AS kpName, " +
+            "kp.subject_id AS subjectId, s.name AS subjectName " +
+            "FROM question_db.question_kp qk " +
+            "LEFT JOIN question_db.knowledge_point kp ON qk.knowledge_point_id = kp.id " +
+            "LEFT JOIN question_db.subject s ON kp.subject_id = s.id " +
+            "WHERE qk.question_id IN " +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<Map<String, Object>> selectQuestionKps(@Param("ids") List<Long> ids);
+
+    @Select("<script>" +
+            "SELECT id, name FROM question_db.subject WHERE id IN " +
+            "<foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach>" +
+            "</script>")
+    List<Map<String, Object>> selectSubjectsByIds(@Param("ids") List<Long> ids);
 }

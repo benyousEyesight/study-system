@@ -13,3 +13,11 @@ spring:
     multipart:
       max-file-size: 50MB
       max-request-size: 50MB
+
+ocr:
+  enabled: true
+  tesseract-path: C:\Program Files\Tesseract-OCR\tesseract.exe
+  language: chi_sim
+  tessdata: C:\Program Files\Tesseract-OCR\tessdata
+  min-text-length: 100
+  resolution: 300

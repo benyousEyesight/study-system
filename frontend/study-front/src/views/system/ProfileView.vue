@@ -111,6 +111,39 @@
           </div>
         </el-card>
 
+        <!-- 知识点薄弱分析 -->
+        <el-card shadow="never" style="margin-top: 16px" v-if="isStudent && weaknessData.length > 0">
+          <template #header>
+            <span>知识点薄弱分析</span>
+            <el-button size="small" text :loading="weaknessLoading" @click="fetchWeakness" style="float:right">刷新</el-button>
+          </template>
+          <div v-for="subject in weaknessData" :key="subject.subjectId" class="weakness-subject">
+            <div class="weakness-subject-header">
+              <span class="weakness-subject-name">{{ subject.subjectName }}</span>
+              <span class="weakness-subject-accuracy" :style="{ color: weaknessColor(subject.subjectAccuracy) }">
+                综合得分率 {{ subject.subjectAccuracy }}%
+              </span>
+            </div>
+            <div class="weakness-items">
+              <div v-for="item in subject.items" :key="item.knowledgePointId" class="weakness-item">
+                <div class="weakness-item-left">
+                  <span class="weakness-kp-name" :title="item.knowledgePointName">{{ item.knowledgePointName }}</span>
+                  <span class="weakness-kp-attempt">({{ item.attemptCount }}题)</span>
+                </div>
+                <div class="weakness-item-right">
+                  <div class="weakness-bar-track">
+                    <div class="weakness-bar-fill" :style="{ width: item.accuracy + '%', background: weaknessColor(item.accuracy) }" />
+                  </div>
+                  <span class="weakness-bar-value" :style="{ color: weaknessColor(item.accuracy) }">{{ item.accuracy }}%</span>
+                  <el-tag :type="weaknessTag(item.level)" size="small" style="width:64px;text-align:center">
+                    {{ weaknessLabel(item.level) }}
+                  </el-tag>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+
         <!-- 最近考试 -->
         <el-card shadow="never" style="margin-top: 16px" v-if="isStudent">
           <template #header>最近考试</template>
@@ -143,6 +176,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { getProfile, uploadAvatar } from '@/api/profile'
 import { getStudentOverview, getStudentSubjects, getStudentRecentExams } from '@/api/student'
+import { getStudentWeakness } from '@/api/stats'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import * as echarts from 'echarts'
@@ -175,12 +209,43 @@ const overviewCards = computed(() => [
   { label: '通过率', value: overview.value?.passRate != null ? overview.value.passRate + '%' : '-' },
 ])
 
+const weaknessData = ref<any[]>([])
+const weaknessLoading = ref(false)
+
 const strongSubjects = computed(() =>
   subjects.value.filter(s => s.accuracy >= 70).slice(0, 5)
 )
 const weakSubjects = computed(() =>
   subjects.value.filter(s => s.accuracy < 70).slice(0, 5)
 )
+
+async function fetchWeakness() {
+  weaknessLoading.value = true
+  try {
+    const res: any = await getStudentWeakness()
+    weaknessData.value = res.data || []
+  } catch {
+    weaknessData.value = []
+  } finally {
+    weaknessLoading.value = false
+  }
+}
+
+function weaknessColor(accuracy: number) {
+  if (accuracy >= 80) return '#67C23A'
+  if (accuracy >= 60) return '#E6A23C'
+  return '#F56C6C'
+}
+
+function weaknessLabel(level: string) {
+  const map: Record<string, string> = { STRONG: '掌握良好', MEDIUM: '一般', WEAK: '薄弱' }
+  return map[level] || level
+}
+
+function weaknessTag(level: string) {
+  const map: Record<string, string> = { STRONG: 'success', MEDIUM: 'warning', WEAK: 'danger' }
+  return map[level] || ''
+}
 
 function rankClass(row: any) {
   if (row.rank === 1) return 'rank-first'
@@ -279,6 +344,7 @@ onMounted(() => {
       fetchOverview()
       fetchSubjects()
       fetchRecentExams()
+      fetchWeakness()
     }
   })
 })
@@ -399,5 +465,85 @@ onMounted(() => {
 }
 :deep(.rank-good) {
   color: #67c23a;
+}
+.weakness-subject {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.weakness-subject:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.weakness-subject-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.weakness-subject-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: #303133;
+}
+.weakness-subject-accuracy {
+  font-size: 14px;
+  font-weight: 500;
+}
+.weakness-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.weakness-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.weakness-item-left {
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.weakness-kp-name {
+  font-size: 13px;
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+.weakness-kp-attempt {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+}
+.weakness-item-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.weakness-bar-track {
+  flex: 1;
+  height: 12px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.weakness-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+.weakness-bar-value {
+  width: 40px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
 }
 </style>

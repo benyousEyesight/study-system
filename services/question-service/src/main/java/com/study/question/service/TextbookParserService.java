@@ -1,22 +1,36 @@
 package com.study.question.service;
 
 import com.study.question.model.dto.TextbookParseResult;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TextbookParserService {
 
@@ -26,6 +40,34 @@ public class TextbookParserService {
 
     private static final Pattern CHAPTER_NUM = Pattern.compile(
             "第([一二三四五六七八九十百千0-9]+)([章节篇])");
+
+    private static final String TESSDATA_BASE_URL =
+            "https://github.com/tesseract-ocr/tessdata/raw/main/";
+
+    @Value("${ocr.enabled:false}")
+    private boolean ocrEnabled;
+
+    @Value("${ocr.tesseract-path:tesseract}")
+    private String tesseractPath;
+
+    @Value("${ocr.language:chi_sim}")
+    private String ocrLanguage;
+
+    @Value("${ocr.tessdata:./tessdata}")
+    private String tessdataPath;
+
+    @Value("${ocr.min-text-length:100}")
+    private int minTextLength;
+
+    @Value("${ocr.resolution:300}")
+    private int ocrResolution;
+
+    @PostConstruct
+    public void initOcr() {
+        if (ocrEnabled) {
+            ensureTessdataExists();
+        }
+    }
 
     public TextbookParseResult parse(MultipartFile file) throws Exception {
         String fileName = file.getOriginalFilename();
@@ -68,7 +110,15 @@ public class TextbookParserService {
             PDFTextStripper stripper = new PDFTextStripper();
             stripper.setSortByPosition(true);
             String text = stripper.getText(doc);
-            return new AbstractMap.SimpleEntry<>(text, doc.getNumberOfPages());
+            int pages = doc.getNumberOfPages();
+
+            if (text.trim().length() < minTextLength && ocrEnabled) {
+                log.info("PDF text extraction returned only {} chars (threshold: {}), falling back to OCR...",
+                        text.trim().length(), minTextLength);
+                text = ocrPdfPages(doc);
+            }
+
+            return new AbstractMap.SimpleEntry<>(text, pages);
         }
     }
 
@@ -83,6 +133,75 @@ public class TextbookParserService {
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             return reader.lines().collect(Collectors.joining("\n"));
+        }
+    }
+
+    // ---- OCR fallback for scanned/image-based PDFs ----
+
+    private String ocrPdfPages(PDDocument doc) throws Exception {
+        PDFRenderer renderer = new PDFRenderer(doc);
+        StringBuilder sb = new StringBuilder();
+        int totalPages = doc.getNumberOfPages();
+
+        log.info("Running OCR on {} pages with language '{}' at {} DPI...", totalPages, ocrLanguage, ocrResolution);
+        for (int i = 0; i < totalPages; i++) {
+            BufferedImage image = renderer.renderImageWithDPI(i, ocrResolution);
+            String pageText = runTesseract(image);
+            log.debug("OCR page {}/{}: {} chars", i + 1, totalPages, pageText.length());
+            sb.append(pageText).append("\n");
+        }
+        log.info("OCR complete, total {} chars", sb.length());
+        return sb.toString();
+    }
+
+    private String runTesseract(BufferedImage image) throws Exception {
+        File tempInput = File.createTempFile("ocr_page_", ".png");
+        try {
+            ImageIO.write(image, "png", tempInput);
+            ProcessBuilder pb = new ProcessBuilder(
+                    tesseractPath, tempInput.getAbsolutePath(), "stdout",
+                    "-l", ocrLanguage, "--tessdata-dir", tessdataPath);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            String result;
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                result = reader.lines().collect(Collectors.joining("\n"));
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("Tesseract OCR failed with exit code " + exitCode
+                        + ". Ensure tesseract is installed and the language pack '"
+                        + ocrLanguage + "' is available.");
+            }
+            return result;
+        } finally {
+            if (tempInput.exists()) {
+                tempInput.delete();
+            }
+        }
+    }
+
+    private void ensureTessdataExists() {
+        Path langFile = Paths.get(tessdataPath, ocrLanguage + ".traineddata");
+        if (Files.exists(langFile)) {
+            log.info("Tessdata found: {}", langFile);
+            return;
+        }
+        try {
+            Files.createDirectories(Paths.get(tessdataPath));
+            URL url = new URL(TESSDATA_BASE_URL + ocrLanguage + ".traineddata");
+            log.info("Downloading {} to {} ...", url, langFile);
+            try (InputStream in = url.openStream()) {
+                Files.copy(in, langFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            log.info("Downloaded tessdata: {}", langFile);
+        } catch (Exception e) {
+            log.warn("Could not download tessdata for '{}': {}. OCR will fail if the " +
+                    "language data is not already installed. Place {}.traineddata in {}",
+                    ocrLanguage, e.getMessage(), ocrLanguage, tessdataPath);
         }
     }
 
